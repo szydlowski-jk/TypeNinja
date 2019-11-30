@@ -18,42 +18,81 @@ class Target {
         this.size = size
         this.timeout = timeout
         this.color = color
+        this.alpha = 1
+        this.active = true
     }
 
     update () {
+        if (this.alpha <= 0) {
+            this.active = false
+            this.alpha = 0
+        } else {
+            this.alpha -= 0.001
+        }
+
         if (keys.has(this.letter.toLowerCase()) ) {
             this.posx = (Math.random() * (gc.width-100)) + 50
             this.posy = (Math.random() * (gc.height-100)) + 50
+            this.letter = randomLetter()
+            this.alpha = 1
 
             keys.delete(this.letter.toLowerCase())
         }
     }
 
     draw () {
-        ctx.fillStyle = this.color
-        ctx.font = this.size + "px Arial Black"
-        ctx.fillText(this.letter, this.posx, this.posy)
+        if (this.active) {
+            ctx.fillStyle = this.color
+            ctx.font = this.size + "px Arial Black"
+            ctx.globalAlpha = this.alpha
+            ctx.fillText(this.letter, this.posx, this.posy)
+        }
     }
 
+    static newTarget() {
+        return new Target(
+            (Math.random() * (gc.width-100)) + 50,
+            (Math.random() * (gc.height-100)) + 50,
+            'A',
+            60,
+            120,
+            "#FFFFFF"
+            )
+    }
 }
 
-
 // Data
+class Stat {
+    constructor( char ) {
+        this.char = char
+        this.apperances = 0
+        this.hits = 0
+        this.hitTimes = []
+    }
+}
+
 let keys = new Set();
 let targets = []
+let stats = []
 
 targets.push(
     new Target(
         (Math.random() * (gc.width-100)) + 50,
         (Math.random() * (gc.height-100)) + 50,
-        'X',
+        randomLetter(),
         60,
         120,
-        "#FF0000"
+        "#FFFFFF"
     )
 )
 
 // Functions
+function randomLetter() {
+    const targetLetters = "ABCDEFGHIJKLMNOPQRSTUWVXYZ1234567890"
+    let i = Math.floor(Math.random() * targetLetters.length)
+    return targetLetters[i]
+}
+
 function handleKeyDown (e) {
     keys.add(e.key)
     console.log("down", keys)
@@ -65,6 +104,7 @@ function handleKeyUp (e) {
 }
 
 function update () {
+    ctx.globalAlpha = 1.0
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, gc.width, gc.height)
 
@@ -74,6 +114,13 @@ function update () {
     for (t of targets) {
         t.update()
         t.draw()
+    }
+
+    for (let i = 0; i < targets.length; i++) {
+        if (targets[i].active == false) {
+            targets.splice(i, 1);
+            i--;
+        }
     }
 
 }
